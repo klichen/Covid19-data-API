@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<title>Covid19api</title>
+{% endblock %}
+
+
+{% block body %}
+<div class="content">
+    <h1 style="text-align: center;">COVID 19 API</h1>
+    <h4 style="text-align: center;">Choose what kind of data you want to add!</h4>
+    <a style="text-align: left;" href="/">Back</a> <br>
+
+    <a style="text-align: center;" href="/time_series/confirmed">Add data about confirmed cases!</a> <br>
+    <a style="text-align: center;" href="/time_series/deaths">Add data about deaths!</a> <br>
+    <a style="text-align: center;" href="/time_series/recovered">Add data about recoveries!</a>
+
+</div>
+{% endblock %}
