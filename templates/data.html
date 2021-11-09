@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<title>Covid19api</title>
+{% endblock %}
+
+
+{% block body %}
+<div class="content">
+    <h1 style="text-align: center;">COVID 19 API</h1>
+    <h4 style="text-align: center;">Upload a {{type}} TimeSeries csv file!</h4>
+    <a style="text-align: left;" href="/time_series">Back</a> 
+
+    <form action="/time_series/{{type}}" method="post" enctype="multipart/form-data">
+        <input type="file" name="fileupload" id="fileToUpload">
+        <input type="submit" value="Upload File" name="submit">
+    </form>
+
+    <table border="1">
+        <tr>
+            <th>Province/State</th>
+            <th>Country/Region</th>
+            <th>Date</th>
+            <th>Quantity</th>
+            <th>Type</th>
+        </tr>
+        {% for entry in entries%}
+            <tr>
+                <td>{{ entry.ProvinceState}}</td>
+                <td>{{ entry.CountryRegion}}</td>
+                <td>{{ entry.date_recorded}}</td>
+                <td>{{ entry.quantity}}</td>
+                <td>{{ entry.case_type}}</td>
+            </tr>
+        {% endfor %}
+    </table>
+
+</div>
+{% endblock %}
