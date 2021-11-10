@@ -15,11 +15,13 @@
     <h4 style="text-align: center;">Choose a date for daily report data you want to add!</h4>
     <form action="/daily_reports" method="post">
         <label>
-          Enter date with format "mm-dd-yy" - (e.g. 05-25-21):
+            Enter date with format "mm-dd-yy" - (e.g. 05-25-21):
         </label>
         <input type="text" name="date" id="date">
         <input type="submit" value="Add date">
-      </form>
+    </form>
+
+    <a style="text-align: center;" href="/clear_data">Clear all current data!</a>
 
 </div>
 {% endblock %}
