@@ -52,6 +52,7 @@ def addTimeSeries(type):
             'Long',
         )
         try:
+            prev_count = db.session.query(TimeSeries).count()
             f = request.files['fileupload']
 
             # store the file contents as a string
@@ -67,7 +68,7 @@ def addTimeSeries(type):
             for time_entry in csv_dicts:
                 for key in keys:
                     if key not in time_entry:
-                        return "Incorrect formatting for uploaded csv file"
+                        return "Incorrect formatting for uploaded csv file", 400
 
                 for date, number in list(time_entry.items())[4:]:
                     added = False
@@ -92,10 +93,15 @@ def addTimeSeries(type):
                         db.session.add(new_entry)
 
             db.session.commit()
+            new_count = db.session.query(TimeSeries).count()
             entries = TimeSeries.query.order_by(TimeSeries.CountryRegion).all()
-            return render_template("data.html", type=type, entries=entries)
+            #return render_template("data.html", type=type, entries=entries)
+            if new_count > prev_count:
+                return "", 201
+            else:
+                return "", 200
         except:
-            return "There was an issue with the uploaded file"
+            return "There was an issue with the uploaded file", 500
     else:
         entries = TimeSeries.query.order_by(TimeSeries.CountryRegion).all()
         return render_template("data.html", type=type, entries=entries)
@@ -127,6 +133,7 @@ def addDailyReports(date):
             'Case_Fatality_Ratio'
         )
         try:
+            prev_count = db.session.query(DailyReports).count()
             f = request.files['fileupload']
 
             # store the file contents as a string
@@ -143,7 +150,7 @@ def addDailyReports(date):
                 added = False
                 for key in keys:
                     if key not in time_entry:
-                        return "Incorrect formatting for uploaded csv file"
+                        return "Incorrect formatting for uploaded csv file", 400
 
                 cur_entries = DailyReports.query.order_by(
                         DailyReports.CountryRegion).all()
@@ -167,11 +174,17 @@ def addDailyReports(date):
                     db.session.add(new_entry)
 
             db.session.commit()
+            new_count = db.session.query(DailyReports).count()
             entries = DailyReports.query.order_by(
                 DailyReports.CountryRegion).all()
-            return render_template("daily_reports.html", date=date, entries=entries)
+            #uncomment below to see added file on client ui
+            #return render_template("daily_reports.html", date=date, entries=entries) 
+            if new_count > prev_count:
+                return "", 201
+            else:
+                return "", 200
         except:
-            return "There was an issue with the uploaded file"
+            return "There was an issue with the uploaded file", 500
     else:
         entries = DailyReports.query.order_by(DailyReports.CountryRegion).all()
         return render_template("daily_reports.html", date=date, entries=entries)
