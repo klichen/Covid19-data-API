@@ -23,12 +23,12 @@ class TimeSeries(db.Model):
         return "<Entry %r>" % self.firstname
 
     # TO TEST
-    def __init__(self):
-        self.ProvinceState = ""
-        self.CountryRegion = "Mitski"
-        self.date_recorded = "01-01-2000"
-        self.quantity = 100
-        self.case_type = "time_series"
+    #def __init__(self):
+    #    self.ProvinceState = ""
+    #    self.CountryRegion = "Mitski"
+    #    self.date_recorded = "01-01-2000"
+    #    self.quantity = 100
+    #    self.case_type = "time_series"
 
 
 class DailyReports(db.Model):
@@ -51,57 +51,57 @@ def addTimeSeries(type):
             'Lat',
             'Long',
         )
-        try:
-            prev_count = db.session.query(TimeSeries).count()
-            f = request.files['fileupload']
+        #try:
+        prev_count = db.session.query(TimeSeries).count()
+        f = request.files['fileupload']
 
-            # store the file contents as a string
-            fstring = f.read()
-            print(fstring.decode("utf-8"), file=sys.stderr)
-            # create list of dictionaries keyed by header row
-            data = fstring.decode("utf-8")
-            csv_dicts = [{k: v for k, v in row.items()} for row in csv.DictReader(
-                data.splitlines(), skipinitialspace=True)]
-            print(csv_dicts, file=sys.stderr)
-            # db.session.query(TimeSeries).delete()
-            # db.session.commit()
-            for time_entry in csv_dicts:
-                for key in keys:
-                    if key not in time_entry:
-                        return "Incorrect formatting for uploaded csv file", 400
+        # store the file contents as a string
+        fstring = f.read()
+        print(fstring.decode("utf-8"), file=sys.stderr)
+        # create list of dictionaries keyed by header row
+        data = fstring.decode("utf-8")
+        csv_dicts = [{k: v for k, v in row.items()} for row in csv.DictReader(
+            data.splitlines(), skipinitialspace=True)]
+        print(csv_dicts, file=sys.stderr)
+        # db.session.query(TimeSeries).delete()
+        # db.session.commit()
+        for time_entry in csv_dicts:
+            for key in keys:
+                if key not in time_entry:
+                    return "Incorrect formatting for uploaded csv file", 400
 
-                for date, number in list(time_entry.items())[4:]:
-                    added = False
-                    to_date = datetime.strptime(
-                        date, '%m/%d/%y').strftime('%m/%d/%y')
+            for date, number in list(time_entry.items())[4:]:
+                added = False
+                to_date = datetime.strptime(
+                    date, '%m/%d/%y').strftime('%m/%d/%y')
 
-                    cur_entries = TimeSeries.query.order_by(
-                        TimeSeries.CountryRegion).all()
-                    for entry in cur_entries:
-                        if (entry.ProvinceState == time_entry["Province/State"] and
-                        entry.CountryRegion == time_entry["Country/Region"] and
-                        entry.date_recorded == to_date and
-                        entry.case_type == type):
-                            entry.quantity = number
-                            added = True
-                        if added:
-                            break
-                    if not added:
-                        new_entry = TimeSeries(
-                            ProvinceState=time_entry['Province/State'], CountryRegion=time_entry['Country/Region'],
-                            date_recorded=to_date, quantity=number, case_type=type)
-                        db.session.add(new_entry)
+                cur_entries = TimeSeries.query.order_by(
+                    TimeSeries.CountryRegion).all()
+                for entry in cur_entries:
+                    if (entry.ProvinceState == time_entry["Province/State"] and
+                    entry.CountryRegion == time_entry["Country/Region"] and
+                    entry.date_recorded == to_date and
+                    entry.case_type == type):
+                        entry.quantity = number
+                        added = True
+                    if added:
+                        break
+                if not added:
+                    new_entry = TimeSeries(
+                        ProvinceState=time_entry['Province/State'], CountryRegion=time_entry['Country/Region'],
+                        date_recorded=to_date, quantity=number, case_type=type)
+                    db.session.add(new_entry)
 
-            db.session.commit()
-            new_count = db.session.query(TimeSeries).count()
-            entries = TimeSeries.query.order_by(TimeSeries.CountryRegion).all()
-            #return render_template("data.html", type=type, entries=entries)
-            if new_count > prev_count:
-                return "", 201
-            else:
-                return "", 200
-        except:
-            return "There was an issue with the uploaded file", 500
+        db.session.commit()
+        new_count = db.session.query(TimeSeries).count()
+        entries = TimeSeries.query.order_by(TimeSeries.CountryRegion).all()
+        #return render_template("data.html", type=type, entries=entries)
+        if new_count > prev_count:
+            return "", 201
+        else:
+            return "", 200
+        #except:
+        #   return "There was an issue with the uploaded file", 500
     else:
         entries = TimeSeries.query.order_by(TimeSeries.CountryRegion).all()
         return render_template("data.html", type=type, entries=entries)
