@@ -4,7 +4,6 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import csv
 import sys
-import pickle
 from datetime import datetime
 
 app = Flask(__name__)
@@ -19,8 +18,14 @@ class TimeSeries(db.Model):
     quantity = db.Column(db.Integer)
     case_type = db.Column(db.String(200), primary_key=True)
 
-    def __rep__(self):
-        return "<Entry %r>" % self.firstname
+    def __init__(self, ProvinceState, CountryRegion, date_recorded, quantity, case_type ):
+        """Create a new TimeSeries entry
+        """
+        self.ProvinceState = ProvinceState
+        self.CountryRegion = CountryRegion
+        self.date_recorded = date_recorded
+        self.quantity = quantity
+        self.case_type = case_type
 
 
 class DailyReports(db.Model):
@@ -32,6 +37,18 @@ class DailyReports(db.Model):
     Deaths = db.Column(db.Integer)
     Recovered = db.Column(db.Integer)
     Active = db.Column(db.Integer)
+
+    def __init__(self, date_recorded, ProvinceState, CountryRegion, CombinedKeys, Confirmed, Deaths, Recovered, Active):
+        """Create a new DailyReports entry
+        """
+        self.date_recorded = date_recorded
+        self.ProvinceState = ProvinceState
+        self.CountryRegion = CountryRegion
+        self.CombinedKeys =  CombinedKeys
+        self.Confirmed =  Confirmed
+        self.Deaths =  Deaths
+        self.Recovered = Recovered
+        self.Active = Active
 
 
 @app.route("/time_series/<type>", methods=["POST", "GET"])
