@@ -83,13 +83,30 @@ def addTimeSeries(type):
                     to_date = datetime.strptime(
                         date, '%m/%d/%y').strftime('%m/%d/%y')
 
-                db.session.commit()
-                new_count = db.session.query(TimeSeries).count()
-                entries = TimeSeries.query.order_by(TimeSeries.CountryRegion).all()
-                if new_count > prev_count:
-                    return render_template("data.html", type=type, entries=entries), 201
-                else:
-                    return render_template("data.html", type=type, entries=entries), 200
+                    cur_entries = TimeSeries.query.order_by(
+                        TimeSeries.CountryRegion).all()
+                    for entry in cur_entries:
+                        if (entry.ProvinceState == time_entry["Province/State"] and
+                        entry.CountryRegion == time_entry["Country/Region"] and
+                        entry.date_recorded == to_date and
+                        entry.case_type == type):
+                            entry.quantity = number
+                            added = True
+                        if added:
+                            break
+                    if not added:
+                        new_entry = TimeSeries(
+                            ProvinceState=time_entry['Province/State'], CountryRegion=time_entry['Country/Region'],
+                            date_recorded=to_date, quantity=number, case_type=type)
+                        db.session.add(new_entry)
+
+            db.session.commit()
+            new_count = db.session.query(TimeSeries).count()
+            entries = TimeSeries.query.order_by(TimeSeries.CountryRegion).all()
+            if new_count > prev_count:
+                return render_template("data.html", type=type, entries=entries), 201
+            else:
+                return render_template("data.html", type=type, entries=entries), 200
         except:
             return "There was an issue with the uploaded file", 500
     else:
