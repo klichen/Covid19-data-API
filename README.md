@@ -24,7 +24,7 @@ Overall, I enjoyed pair programming. On both occasions, Kevin and I solved the p
 
 Testing Coverage
 
-Screenshot provided on our repo's Issues tab.
+- Screenshot provided on our repo's Issues tab.
 
 Documentation 
 
