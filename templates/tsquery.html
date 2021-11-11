@@ -16,33 +16,15 @@
             <p>Place(s):</p>
             <input type="text" name="places" id="places">
             <br>
-            <p>Date(s):</p>
+            <p>Date(s) [Format: m/d/yy,m/d/yy]:</p>
             <input type="text" name="dates" id="dates">
             <br>
-            <p>Data:</p>
-            <input type="text" name="data" id="data">
+            <p>Output Type [CSV]:</p>
+            <input type="text" name="output" id="output">
             <br>
-            <input type="submit" value="CSV" />
+            <input type="submit" value="Query"/>
     </form>
     <br>
-
-    <!--
-    <form action="/time_series/{{type}}/query">
-        <input type="submit" value="CSV" />
-    </form>
-    -->
-
-    <form action="/time_series/{{type}}/query">
-        <input type="submit" value="JSON" />
-    </form>
-
-
-    {% for place in places_lst%}
-            <tr>
-                <td>{{ place}}</td>
-            </tr>
-        {% endfor %}
-
     
     </div>
 

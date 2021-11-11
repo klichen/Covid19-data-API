@@ -217,10 +217,6 @@ def ts_query(type):
         if output == "CSV":
             result = ts_print_csv(column, places_lst, dates_lst)
 
-       """  elif output == "JSON":
-            result = ts_print_json(column, places_lst, dates_lst) """
-
-
         if result == "ERROR":
             return "There was an issue with the parameters used"
             #redirect('/time_series/<type>/query')
@@ -292,9 +288,6 @@ def dr_query(date):
 
         if output == "CSV":
             result = dr_print_csv(column, places_lst, data_lst)
-
-        """ elif output == "JSON":
-            result = dr_print_json(column, places_lst, data_lst) """
 
         if result == "ERROR":
             return "There was an issue with the parameters used"
