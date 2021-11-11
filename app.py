@@ -59,57 +59,39 @@ def addTimeSeries(type):
             'Lat',
             'Long',
         )
-        #try:
-        prev_count = db.session.query(TimeSeries).count()
-        f = request.files['fileupload']
+        try:
+            prev_count = db.session.query(TimeSeries).count()
+            f = request.files['fileupload']
 
-        # store the file contents as a string
-        fstring = f.read()
-        print(fstring.decode("utf-8"), file=sys.stderr)
-        # create list of dictionaries keyed by header row
-        data = fstring.decode("utf-8")
-        csv_dicts = [{k: v for k, v in row.items()} for row in csv.DictReader(
-            data.splitlines(), skipinitialspace=True)]
-        print(csv_dicts, file=sys.stderr)
-        # db.session.query(TimeSeries).delete()
-        # db.session.commit()
-        for time_entry in csv_dicts:
-            for key in keys:
-                if key not in time_entry:
-                    return "Incorrect formatting for uploaded csv file", 400
+            # store the file contents as a string
+            fstring = f.read()
+            print(fstring.decode("utf-8"), file=sys.stderr)
+            # create list of dictionaries keyed by header row
+            data = fstring.decode("utf-8")
+            csv_dicts = [{k: v for k, v in row.items()} for row in csv.DictReader(
+                data.splitlines(), skipinitialspace=True)]
+            print(csv_dicts, file=sys.stderr)
+            # db.session.query(TimeSeries).delete()
+            # db.session.commit()
+            for time_entry in csv_dicts:
+                for key in keys:
+                    if key not in time_entry:
+                        return "Incorrect formatting for uploaded csv file", 400
 
-            for date, number in list(time_entry.items())[4:]:
-                added = False
-                to_date = datetime.strptime(
-                    date, '%m/%d/%y').strftime('%m/%d/%y')
+                for date, number in list(time_entry.items())[4:]:
+                    added = False
+                    to_date = datetime.strptime(
+                        date, '%m/%d/%y').strftime('%m/%d/%y')
 
-                cur_entries = TimeSeries.query.order_by(
-                    TimeSeries.CountryRegion).all()
-                for entry in cur_entries:
-                    if (entry.ProvinceState == time_entry["Province/State"] and
-                    entry.CountryRegion == time_entry["Country/Region"] and
-                    entry.date_recorded == to_date and
-                    entry.case_type == type):
-                        entry.quantity = number
-                        added = True
-                    if added:
-                        break
-                if not added:
-                    new_entry = TimeSeries(
-                        ProvinceState=time_entry['Province/State'], CountryRegion=time_entry['Country/Region'],
-                        date_recorded=to_date, quantity=number, case_type=type)
-                    db.session.add(new_entry)
-
-        db.session.commit()
-        new_count = db.session.query(TimeSeries).count()
-        entries = TimeSeries.query.order_by(TimeSeries.CountryRegion).all()
-        #return render_template("data.html", type=type, entries=entries)
-        if new_count > prev_count:
-            return "", 201
-        else:
-            return "", 200
-        #except:
-        #   return "There was an issue with the uploaded file", 500
+                db.session.commit()
+                new_count = db.session.query(TimeSeries).count()
+                entries = TimeSeries.query.order_by(TimeSeries.CountryRegion).all()
+                if new_count > prev_count:
+                    return render_template("data.html", type=type, entries=entries), 201
+                else:
+                    return render_template("data.html", type=type, entries=entries), 200
+        except:
+            return "There was an issue with the uploaded file", 500
     else:
         entries = TimeSeries.query.order_by(TimeSeries.CountryRegion).all()
         return render_template("data.html", type=type, entries=entries)
@@ -146,14 +128,13 @@ def addDailyReports(date):
 
             # store the file contents as a string
             fstring = f.read()
-            print(fstring.decode("utf-8"), file=sys.stderr)
-            # create list of dictionaries keyed by header row
             data = fstring.decode("utf-8")
+
+            # create list of dictionaries keyed by header row
+            # from https://riptutorial.com/flask/example/32038/parse-csv-file-upload-as-list-of-dictionaries-in-flask-without-saving
             csv_dicts = [{k: v for k, v in row.items()} for row in csv.DictReader(
                 data.splitlines(), skipinitialspace=True)]
             print(csv_dicts, file=sys.stderr)
-            #db.session.query(DailyReports).delete()
-            #db.session.commit()
             for time_entry in csv_dicts:
                 added = False
                 for key in keys:
@@ -185,12 +166,10 @@ def addDailyReports(date):
             new_count = db.session.query(DailyReports).count()
             entries = DailyReports.query.order_by(
                 DailyReports.CountryRegion).all()
-            #uncomment below to see added file on client ui
-            #return render_template("daily_reports.html", date=date, entries=entries) 
             if new_count > prev_count:
-                return "", 201
+                return render_template("daily_reports.html", date=date, entries=entries), 201
             else:
-                return "", 200
+                return render_template("daily_reports.html", date=date, entries=entries), 200
         except:
             return "There was an issue with the uploaded file", 500
     else:
@@ -406,12 +385,13 @@ def dr_print_csv(column, places_lst, data_lst):
     return header + result
 
 #testing purposes
-@app.route("/clear_data")
+@app.route("/clear_data", methods=["POST", "GET"])
 def clear():
-    db.session.query(TimeSeries).delete()
-    db.session.query(DailyReports).delete()
-    db.session.commit()
-    return redirect("/")
+    if request.method == "POST":
+        db.session.query(TimeSeries).delete()
+        db.session.query(DailyReports).delete()
+        db.session.commit()
+        return redirect("/")
 
 if __name__ == "__main__":
     app.run(debug=True)
