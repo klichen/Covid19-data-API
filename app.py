@@ -1,8 +1,9 @@
 from operator import ne
 from flask import Flask, render_template, url_for, request, redirect
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
+from datetime import datetime, time
 import csv
+import json
 import sys
 from datetime import datetime
 
@@ -27,7 +28,6 @@ class TimeSeries(db.Model):
         self.quantity = quantity
         self.case_type = case_type
 
-
 class DailyReports(db.Model):
     date_recorded = db.Column(db.String(200), primary_key=True)
     ProvinceState = db.Column(db.String(200), primary_key=True)
@@ -49,7 +49,6 @@ class DailyReports(db.Model):
         self.Deaths =  Deaths
         self.Recovered = Recovered
         self.Active = Active
-
 
 @app.route("/time_series/<type>", methods=["POST", "GET"])
 def addTimeSeries(type):
@@ -217,6 +216,183 @@ def daily_reports_home():
 @app.route("/daily_reports/", methods=["POST", "GET"])
 def no_date():
     return "Please enter a date"
+
+@app.route("/time_series/<type>/query", methods=["POST", "GET"])
+def ts_query(type):
+    if request.method == "POST":
+        column = request.form['column']
+        places = request.form['places']
+        dates = request.form['dates']
+        # data = request.form['data'] (for daily report)
+        output = request.form['output']
+
+        # now that we have all the input, return the requested data 
+        places_lst = places.split(",")
+        dates_lst = dates.split(",")
+        # data_lst = data.split(",") (for daily report)
+
+        if output == "CSV":
+            result = ts_print_csv(column, places_lst, dates_lst)
+
+        if result == "ERROR":
+            return "There was an issue with the parameters used"
+            #redirect('/time_series/<type>/query')
+
+        return render_template('displayquery.html', result=result)
+    else:
+        return render_template('tsquery.html', type=type)
+
+def ts_print_csv(column, places_lst, dates_lst):
+    header="Province/State,Country/Region"
+    result = ""
+
+    datetime_lst = [datetime.strptime(dates_lst[0], '%m/%d/%y'), datetime.strptime(dates_lst[1], '%m/%d/%y')]
+    
+    if column == "ProvinceState":
+
+        for state in places_lst:
+            curr_place = TimeSeries.query.filter_by(ProvinceState=state).all()
+
+            result += state + "," + curr_place[0].CountryRegion
+
+            for entry in curr_place:
+                curr_datetime = datetime.strptime(entry.date_recorded,'%m/%d/%y') 
+                if datetime_lst[0] <= curr_datetime <= datetime_lst[1]:
+                    header += "," + curr_datetime.strftime('%m/%d/%y')
+                    result += "," + str(entry.quantity) 
+
+            result += "\n"
+
+        header += "\n"
+
+    elif column == "CountryRegion":
+        #for place in places_lst:
+        #    curr = TimeSeries.query.filter_by(CountryRegion=place).first() 
+
+        for country in places_lst:
+            curr_place = TimeSeries.query.filter_by(CountryRegion=country).all()
+
+            result += "," + country
+
+            for entry in curr_place:
+                curr_datetime = datetime.strptime(entry.date_recorded,'%m/%d/%y') 
+                if datetime_lst[0] <= curr_datetime <= datetime_lst[1]:
+                    header += "," + curr_datetime.strftime('%m/%d/%y')
+                    result += "," + str(entry.quantity) 
+                
+            result += "\n"
+        
+        header += "\n"
+
+    else:
+        return "ERROR"
+
+
+    return header + result
+
+@app.route("/daily_reports/<date>/query", methods=["POST", "GET"])
+def dr_query(date):
+    if request.method == "POST":
+        column = request.form['column']
+        places = request.form['places']
+        data = request.form['data'] 
+        output = request.form['output']
+
+        # now that we have all the input, return the requested data 
+        places_lst = places.split(",")
+        # dates_lst = dates.split(",")
+        data_lst = data.split(",") 
+
+        if output == "CSV":
+            result = dr_print_csv(column, places_lst, data_lst)
+
+        if result == "ERROR":
+            return "There was an issue with the parameters used"
+            #redirect('/time_series/<type>/query')
+
+        return render_template('displayquery.html', result=result)
+    else:
+        return render_template('drquery.html', date=date)
+        
+
+def dr_print_csv(column, places_lst, data_lst):
+    header="Province/State,Country/Region"
+    result = ""
+
+    confirmed = False
+    deaths = False
+    recovered = False
+    active = False
+
+    if "Confirmed" in data_lst:
+        header += "," + "Confirmed"
+        confirmed = True
+
+    if "Deaths" in data_lst:
+        header += "," + "Deaths"
+        deaths = True
+
+    if "Recovered" in data_lst:
+        header += "," + "Recovered"
+        recovered = True
+
+    if "Active" in data_lst:
+        header += "," + "Active"
+        active = True
+
+    header += "," + "Combined Keys" + "\n"
+
+    if column == "ProvinceState":
+
+        for state in places_lst:
+            curr_state = DailyReports.query.filter_by(ProvinceState=state).first()
+
+            result += state + "," + curr_state.CountryRegion
+
+            if confirmed:
+                result += "," + str(curr_state.Confirmed)
+
+            if deaths:
+                result += "," + str(curr_state.Deaths)
+
+            if recovered:
+                result += "," + str(curr_state.Recovered)
+
+            if active:
+                result += "," + str(curr_state.Active)
+            
+            result += "," + curr_state.CombinedKeys
+            result += "\n"
+
+        header += "\n"
+
+    elif column == "CountryRegion":
+        for country in places_lst:
+            curr_country = DailyReports.query.filter_by(CountryRegion=country).first()
+
+            result += curr_country.ProvinceState + "," + country
+
+            if confirmed:
+                result += "," + str(curr_country.Confirmed)
+
+            if deaths:
+                result += "," + str(curr_country.Deaths)
+
+            if recovered:
+                result += "," + str(curr_country.Recovered)
+
+            if active:
+                result += "," + str(curr_country.Active)
+            
+            result += "," + curr_country.CombinedKeys
+            result += "\n"
+
+        header += "\n"
+
+    else:
+        return "ERROR"
+
+    return header + result
 
 #testing purposes
 @app.route("/clear_data", methods=["POST", "GET"])
