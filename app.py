@@ -104,11 +104,10 @@ def addTimeSeries(type):
             db.session.commit()
             new_count = db.session.query(TimeSeries).count()
             entries = TimeSeries.query.order_by(TimeSeries.CountryRegion).all()
-            #return render_template("data.html", type=type, entries=entries)
             if new_count > prev_count:
-                return "", 201
+                return render_template("data.html", type=type, entries=entries), 201
             else:
-                return "", 200
+                return render_template("data.html", type=type, entries=entries), 200
         except:
             return "There was an issue with the uploaded file", 500
     else:
@@ -147,14 +146,13 @@ def addDailyReports(date):
 
             # store the file contents as a string
             fstring = f.read()
-            print(fstring.decode("utf-8"), file=sys.stderr)
-            # create list of dictionaries keyed by header row
             data = fstring.decode("utf-8")
+
+            # create list of dictionaries keyed by header row
+            # from https://riptutorial.com/flask/example/32038/parse-csv-file-upload-as-list-of-dictionaries-in-flask-without-saving
             csv_dicts = [{k: v for k, v in row.items()} for row in csv.DictReader(
                 data.splitlines(), skipinitialspace=True)]
             print(csv_dicts, file=sys.stderr)
-            #db.session.query(DailyReports).delete()
-            #db.session.commit()
             for time_entry in csv_dicts:
                 added = False
                 for key in keys:
@@ -186,12 +184,10 @@ def addDailyReports(date):
             new_count = db.session.query(DailyReports).count()
             entries = DailyReports.query.order_by(
                 DailyReports.CountryRegion).all()
-            #uncomment below to see added file on client ui
-            #return render_template("daily_reports.html", date=date, entries=entries) 
             if new_count > prev_count:
-                return "", 201
+                return render_template("daily_reports.html", date=date, entries=entries), 201
             else:
-                return "", 200
+                return render_template("daily_reports.html", date=date, entries=entries), 200
         except:
             return "There was an issue with the uploaded file", 500
     else:
@@ -223,12 +219,13 @@ def no_date():
     return "Please enter a date"
 
 #testing purposes
-@app.route("/clear_data")
+@app.route("/clear_data", methods=["POST", "GET"])
 def clear():
-    db.session.query(TimeSeries).delete()
-    db.session.query(DailyReports).delete()
-    db.session.commit()
-    return redirect("/")
+    if request.method == "POST":
+        db.session.query(TimeSeries).delete()
+        db.session.query(DailyReports).delete()
+        db.session.commit()
+        return redirect("/")
 
 if __name__ == "__main__":
     app.run(debug=True)
