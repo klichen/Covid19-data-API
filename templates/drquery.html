@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<title>Covid19api</title>
+{% endblock %}
+
+{% block body %}
+<div class="content">
+    <h1 style="text-align: center;">Query</h1>
+
+    </div class="form">
+        <form action="/daily_reports/{{date}}/query" method="POST">
+            <p>Type of Place:</p>
+            <input type="text" name="column" id="column">
+            <br>
+            <p>Place(s):</p>
+            <input type="text" name="places" id="places">
+            <br>
+            <p>Data [Confirmed/Deaths/Recovered/Active]:</p>
+            <input type="text" name="data" id="data">
+            <br>
+            <p>Output Type [CSV]:</p>
+            <input type="text" name="output" id="output">
+            <br>
+            <input type="submit" value="Query" />
+    </form>
+    <br>
+    
+    </div>
+
+</div>
+{% endblock %}
